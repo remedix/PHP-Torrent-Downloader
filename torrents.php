@@ -1,23 +1,20 @@
 <?
 	error_reporting(E_ALL);
-	define('AUTOTORRENTS_PATH'	,"/volume1/autotorrents/");
-	define('HISTORY_FILE'		,"/volume1/homes/admin/torrents/history.txt");
 	define('CONFIG'				,"/volume1/homes/admin/torrents/torrents.config.json");
-
+	$config = json_decode(file_get_contents(CONFIG), true);
+	
 	$excludeShows = "(brrip|1080p|dvdrip|hebsub|dvdr|480p|WEB\-DL|lies)"; // 'lies' is for house of lies
 	$excludeMovies= "(hdtv|dvdrip|1080p|hebsub|dvdr|480p|WEB\-DL)";
-
-	$historyFile = HISTORY_FILE;
-
-	$config = json_decode(file_get_contents(CONFIG), true);
-
+	
+	$historyFile = $config['HISTORY_FILE'];
+	
 	$sources = $config['sources'];
 	$shows = "(".implode("|",$config['shows']).")";
 	$movies = "(".implode("|",$config['movies']).")";
 
 	function downloadTorrent($url){
 		$filename = md5($url);
-		$cmd = 'wget -q -O "'.AUTOTORRENTS_PATH.$filename.'.torrent" '.$url; 
+		$cmd = 'wget -q -O "'.$config['AUTOTORRENTS_PATH'].$filename.'.torrent" '.$url; 
 		exec($cmd."\n");
 	}
 

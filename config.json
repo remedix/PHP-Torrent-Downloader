@@ -1,5 +1,7 @@
 {	
 	"email": "youremail@email",
+        "AUTOTORRENTS_PATH":    "/volume1/autotorrents/", 
+        "HISTORY_FILE":         "/volume1/homes/admin/torrents/history.txt",
 	"sources": {
 		"sourcename"		:	"URL-RSS-TORRENT-SITE",
 	},
