@@ -1,0 +1,4 @@
+Run this every 15 minutes or so.
+AUTOTORRENTS_PATH = The path to save the .torrent files - Also the path where you torrent client will be watching for new torrents
+HISTORY_FILE = The file to keep history of what has been downlaoded
+CONFIG = Configuration file with all the series/movies to keep track
