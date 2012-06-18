@@ -13,8 +13,10 @@
 	$movies = "(".implode("|",$config['movies']).")";
 
 	function downloadTorrent($url){
+		global $config;
+		$path = $config['AUTOTORRENTS_PATH']; 
 		$filename = md5($url);
-		$cmd = 'wget -q -O "'.$config['AUTOTORRENTS_PATH'].$filename.'.torrent" '.$url; 
+		$cmd = 'wget -q -O "'.$path.$filename.'.torrent" '.$url; 
 		exec($cmd."\n");
 	}
 
