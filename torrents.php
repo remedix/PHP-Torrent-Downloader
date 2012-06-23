@@ -5,7 +5,7 @@
 	$config = json_decode(file_get_contents(CONFIG), true);
 
 	$excludeShows = "(brrip|1080p|dvdrip|hebsub|dvdr|480p|WEB\-DL|lies)"; // 'lies' is for house of lies
-	$excludeMovies= "(hdtv|dvdrip|1080p|hebsub|dvdr|480p|WEB\-DL)";
+	$excludeMovies= "(ts|tc|hdtv|dvdrip|hdts|1080p|hebsub|dvdr|480p|WEB\-DL)";
 	$historyFile = $config['HISTORY_FILE'];
 	
 	$sources = $config['sources'];
@@ -60,14 +60,14 @@
 			}
 		}
 	}
-	
-	
-	if (DEBUG) { print_r($downloadList); exit; }
 
+
+	if (DEBUG) { print_r($downloadList); exit; }
+	
 	// Download all files inthat download list
 	$messages = $files = array();
-    $lines = file($historyFile,FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    if ($downloadList) foreach($downloadList as $d){
+	$lines = file($historyFile,FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+	if ($downloadList) foreach($downloadList as $d){
     	$entry = ($d[0]==$d[2]) ? $d[0] : $d[0]." ".$d[2];
     	$download = (in_array($entry,$lines) || in_array($entry,$files)) ? false : true;
     	if ($download) {
@@ -80,7 +80,7 @@
     	}
     }
 
-	if ( count($messages)>0 ) {
+    if ( count($messages)>0 ) {
 		system('/bin/echo "'.implode("\n",$messages).'" | /opt/bin/nail -s "Auto Downloads" '.$config['email']);
-	}
+	}	
 ?>
