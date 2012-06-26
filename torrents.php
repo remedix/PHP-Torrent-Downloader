@@ -3,13 +3,7 @@
 	define('DEBUG',	0);
 	define('CONFIG'	,dirname ( __FILE__ )."/torrents.config.json");
 	$config = json_decode(file_get_contents(CONFIG), true);
-
-	$excludeShows = $config['exclude_shows'];
-	$excludeMovies = $config['exclude_movies'];
 	
-	$historyFile = $config['history_file'];
-
-	$sources = $config['sources'];
 	$shows = "(".implode("|",$config['shows']).")";
 	$movies = "(".implode("|",$config['movies']).")";
 
@@ -23,7 +17,7 @@
 	}
 
 	$downloadList = array();	
-	foreach($sources as $sourceKey=>$url){
+	foreach($config['sources'] as $sourceKey=>$url){
 		try {
 			// Support for gzipped xml
 			$xml = @new SimpleXMLElement("compress.zlib://$url", NULL, TRUE);
@@ -37,7 +31,7 @@
 				}
 						
 				// Prepare the downloadList for Tv shows
-				if (!preg_match("/$excludeShows/is",$title)){
+				if (!preg_match("/${config['exclude_shows']}/is",$title)){
 					if (preg_match("/$shows\s(.*?)S([0-9]+)E([0-9]+)(.*?)720p\s/is",$title,$m)){
 						$episode = "S".$m[3]."E".$m[4];
 						preg_match("/(.*?)$episode(.*?)/is",$title,$cleanTitle);
@@ -48,7 +42,7 @@
 				}
 	
 				// Prepare the downloadList for Tv shows
-				if (!preg_match("/$excludeMovies/is",$title)){
+				if (!preg_match("/${config['exclude_movies']}/is",$title)){
 					if (preg_match("/^$movies\s(.*?)\s720p\s/is",$title,$m)){
 						$theTitle = ucwords(strtolower(trim($m[1])));
 						$theDate = trim(intval($m[2]));
@@ -70,7 +64,7 @@
 	
 	// Download all files inthat download list
 	$messages = $files = array();
-	$lines = file($historyFile,FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+	$lines = file($config['history_file'],FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 	if ($downloadList) foreach($downloadList as $d){
     	$entry = ($d[0]==$d[2]) ? $d[0] : $d[0]." ".$d[2];
     	// Check if we already have this file on our download list
@@ -78,7 +72,7 @@
     	$download = (in_array($entry,$lines) || in_array($entry,$files) || preg_match("/proper/is",$d[1])) ? false : true;
     	if ($download) {
     		downloadTorrent($d[1]);
-    		$history = fopen($historyFile, 'a');
+    		$history = fopen($config['history_file'], 'a');
     		$messages[$entry] = "[".$d[3]."] $entry";
     		$files[] = $entry;
     		fwrite($history,$entry."\n");
