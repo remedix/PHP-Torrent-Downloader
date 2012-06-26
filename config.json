@@ -1,9 +1,13 @@
-{	
-	"email": "youremail@email",
-        "AUTOTORRENTS_PATH":    "/volume1/autotorrents/", 
-        "HISTORY_FILE":         "/volume1/homes/admin/torrents/history.txt",
+{
+	"email"					:	"email",
+	"autotorrents_path"		:	"/path/to/watchdir",
+	"history_file"			:	"/path/to/historyfile/history.txt",
+	"exclude_movies"		:	"(ts|tc|hdtv|dvdrip|hdts|1080p|hebsub|dvdr|480p|WEB\\-DL)",
+	"exclude_shows"			:	"(brrip|1080p|dvdrip|hebsub|dvdr|480p|WEB\\-DL|lies)",
 	"sources": {
-		"sourcename"		:	"URL-RSS-TORRENT-SITE",
+		"source1"			:	"URL goes here",
+		"source2"			:	"URL goes here",
+		"source3"			:	"URL goes here"
 	},
     "shows": [
         "dexter",
@@ -20,7 +24,6 @@
         "burn notice",
         "always sunny in philadelphia",
         "how i met your mother",
-        "two and a half men",
         "eureka",
         "warehouse 13",
         "modern family",
@@ -61,9 +64,12 @@
     "movies": [
         "woman in black",
         "avengers",
-        "superman",
         "the hunger games",
         "prometheus",
-        "resident evil"
+        "resident evil",
+        "men in black iii",
+        "Snow White and the Huntsman",
+        "dictator",
+        "amazing spider-man"
     ]
 }

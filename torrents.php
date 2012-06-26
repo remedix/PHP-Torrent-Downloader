@@ -1,13 +1,14 @@
 <?
 	error_reporting(E_ALL);
 	define('DEBUG',	0);
-	define('CONFIG'	,"/volume1/homes/admin/torrents/torrents.config.json");
+	define('CONFIG'	,dirname ( __FILE__ )."/torrents.config.json");
 	$config = json_decode(file_get_contents(CONFIG), true);
 
-	$excludeShows = "(brrip|1080p|dvdrip|hebsub|dvdr|480p|WEB\-DL|lies)"; // 'lies' is for house of lies
-	$excludeMovies= "(ts|tc|hdtv|dvdrip|hdts|1080p|hebsub|dvdr|480p|WEB\-DL)";
-	$historyFile = $config['HISTORY_FILE'];
+	$excludeShows = $config['exclude_shows'];
+	$excludeMovies = $config['exclude_movies'];
 	
+	$historyFile = $config['history_file'];
+
 	$sources = $config['sources'];
 	$shows = "(".implode("|",$config['shows']).")";
 	$movies = "(".implode("|",$config['movies']).")";
@@ -15,7 +16,7 @@
 	// Actual torrent downloaded
 	function downloadTorrent($url){
 		global $config;
-		$path = $config['AUTOTORRENTS_PATH']; 
+		$path = $config['autotorrents_path']; 
 		$filename = md5($url);
 		$cmd = 'wget -q -O "'.$path.$filename.'.torrent" '.$url; 
 		exec($cmd."\n");
@@ -72,7 +73,9 @@
 	$lines = file($historyFile,FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 	if ($downloadList) foreach($downloadList as $d){
     	$entry = ($d[0]==$d[2]) ? $d[0] : $d[0]." ".$d[2];
-    	$download = (in_array($entry,$lines) || in_array($entry,$files)) ? false : true;
+    	// Check if we already have this file on our download list
+    	// Also if proper is found, bypass the check and still download it
+    	$download = (in_array($entry,$lines) || in_array($entry,$files) || preg_match("/proper/is",$d[1])) ? false : true;
     	if ($download) {
     		downloadTorrent($d[1]);
     		$history = fopen($historyFile, 'a');
