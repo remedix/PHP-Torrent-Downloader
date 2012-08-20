@@ -12,7 +12,7 @@
 		global $config;
 		$path = $config['autotorrents_path']; 
 		$filename = md5($url);
-		$cmd = 'wget -q -O "'.$path.$filename.'.torrent" '.$url; 
+		$cmd = 'wget -q -O "'.$path.$filename.'.torrent" "'.$url.'"'; 
 		exec($cmd."\n");
 	}
 
@@ -41,7 +41,7 @@
 					}
 				}
 	
-				// Prepare the downloadList for Tv shows
+				// Prepare the downloadList for Movies
 				if (!preg_match("/${config['exclude_movies']}/is",$title)){
 					if (preg_match("/^$movies\s(.*?)\s720p\s/is",$title,$m)){
 						$theTitle = ucwords(strtolower(trim($m[1])));
