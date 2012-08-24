@@ -43,13 +43,13 @@
 	
 				// Prepare the downloadList for Movies
 				if (!preg_match("/${config['exclude_movies']}/is",$title)){
-					if (preg_match("/^$movies\s(.*?)\s720p\s/is",$title,$m)){
+					if (preg_match("/$movies(.*?)([0-9]{4})\s720p\s/is",$title,$m)){
 						$theTitle = ucwords(strtolower(trim($m[1])));
-						$theDate = trim(intval($m[2]));
+						$theDate = trim(intval($m[3]));
 						//$theTitle = trim($theTitle.' '.$theDate);
 						// double check with the size. It should be greater than 2GB
 						// TBD
-						$theContent = array($theTitle,$torrent,null,$sourceKey);
+						$theContent = array($theTitle,$torrent,$theDate,$sourceKey);
 						$downloadList[$theTitle] = $theContent;
 					}
 				}
@@ -58,7 +58,6 @@
 			echo $sourceKey.' contains errors in XML: ',  $e->getMessage(), " - Skipping\n";
 		}
 	}
-
 
 	if (DEBUG) { print_r($downloadList); exit; }
 	
@@ -81,6 +80,7 @@
     }
 
     if ( count($messages)>0 ) {
+    	// or use php's mail() - I'm running this on a synology device that didn't allow it
 		system('/bin/echo "'.implode("\n",$messages).'" | /opt/bin/nail -s "Auto Downloads" '.$config['email']);
 	}	
 ?>
