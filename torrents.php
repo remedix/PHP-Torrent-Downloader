@@ -7,13 +7,44 @@
 	$shows = "(".implode("|",$config['shows']).")";
 	$movies = "(".implode("|",$config['movies']).")";
 
+	// strips characters and finds episodes number
+	function getShowsNumber($episode){
+		return preg_replace("[^0-9]", "",$episode);	
+	}
+		
+	// Checks whether this is a new download based on the episode number
+	function isNewestFile($show,$episode,$lines){
+		preg_match_all("/(.*?)S([0-9]+)E([0-9]+)/is",implode("\n",$lines),$matches);
+		$trimmed = array_reverse(array_map('strtolower',array_map('trim',$matches[1])));
+		$seasons = array_reverse($matches[2]);
+		$episodes = array_reverse($matches[3]);
+		$k = array_search(strtolower(trim($show)),$trimmed);
+		if (strtolower($show) == strtolower($trimmed[$k])){
+			if (getShowsNumber($episode)>getShowsNumber($seasons[$k].$episodes[$k])){
+				echo (DEBUG) ? $show." - Will Download: ".getShowsNumber($episode)." is newer than ".getShowsNumber($seasons[$k].$episodes[$k])."\n" : '';
+				return false;
+			} else {
+				echo (DEBUG) ? $show." - Will Skip: ".getShowsNumber($episode)." is older or equal than ".getShowsNumber($seasons[$k].$episodes[$k])."\n" : '';
+				return true;
+			}
+		} else {
+			echo (DEBUG) ? 'Will download for the first time '.$show."\n" : '';
+			return false;
+		}
+		
+	}
+
 	// Actual torrent downloaded
 	function downloadTorrent($url){
 		global $config;
 		$path = $config['autotorrents_path']; 
 		$filename = md5($url);
 		$cmd = 'wget -q -O "'.$path.$filename.'.torrent" "'.$url.'"'; 
-		exec($cmd."\n");
+		if (DEBUG){
+			echo $cmd."\n";		
+		} else {
+			exec($cmd);
+		}
 	}
 
 	$downloadList = array();	
@@ -21,6 +52,7 @@
 		try {
 			// Support for gzipped xml
 			$xml = @new SimpleXMLElement("compress.zlib://$url", NULL, TRUE);
+			//print_r($xml);echo "\n\n\n\n\n";
 			// Create a download list
 			foreach($xml->channel->item as $i){
 				$title = $i->title;
@@ -32,10 +64,11 @@
 						
 				// Prepare the downloadList for Tv shows
 				if (!preg_match("/${config['exclude_shows']}/is",$title)){
-					if (preg_match("/$shows\s(.*?)S([0-9]+)E([0-9]+)(.*?)720p\s/is",$title,$m)){
+//					if (preg_match("/$shows\s(.*?)S([0-9]+)E([0-9]+)(.*?)720p\s/is",$title,$m)){
+					if (preg_match("/$shows(.*?)S([0-9]+)E([0-9]+)(.*?)720p/is",$title,$m)){
 						$episode = "S".$m[3]."E".$m[4];
 						preg_match("/(.*?)$episode(.*?)/is",$title,$cleanTitle);
-						$theTitle = ucfirst(trim($cleanTitle[1]));
+						$theTitle = str_replace(".","",ucfirst(trim($cleanTitle[1])));
 						$theContent = array($theTitle,$torrent,$episode,$sourceKey);
 						$downloadList[$theTitle] = $theContent;
 					}
@@ -59,7 +92,7 @@
 		}
 	}
 
-	if (DEBUG) { print_r($downloadList); exit; }
+	if (DEBUG) { print_r($downloadList); }
 	
 	// Download all files inthat download list
 	$messages = $files = array();
@@ -68,8 +101,8 @@
     	$entry = ($d[0]==$d[2]) ? $d[0] : $d[0]." ".$d[2];
     	// Check if we already have this file on our download list
     	// Also if proper is found, bypass the check and still download it
-    	$download = (in_array($entry,$lines) || in_array($entry,$files) || preg_match("/proper/is",$d[1])) ? false : true;
-    	if ($download) {
+    	$download = (isNewestFile($d[0],$d[2],$lines) || in_array($entry,$lines) || in_array($entry,$files) || preg_match("/proper/is",$d[1])) ? false : true;
+    	if ($download && !DEBUG) {
     		downloadTorrent($d[1]);
     		$history = fopen($config['history_file'], 'a');
     		$messages[$entry] = "[".$d[3]."] $entry";
@@ -79,8 +112,8 @@
     	}
     }
 
-    if ( count($messages)>0 ) {
+    if ( count($messages)>0 && !DEBUG) {
     	// or use php's mail() - I'm running this on a synology device that didn't allow it
-		system('/bin/echo "'.implode("\n",$messages).'" | /opt/bin/nail -s "Auto Downloads" '.$config['email']);
+		system('echo "'.implode("\n",$messages).'" | nail -s "Auto Downloads" '.$config['email']);
 	}	
 ?>
