@@ -1,6 +1,6 @@
 Run this every 15 minutes or so.
 AUTOTORRENTS_PATH = The path to save the .torrent files - Also the path where you torrent client will be watching for new torrents
 HISTORY_FILE = The file to keep history of what has been downlaoded
-CONFIG = Configuration file with all the series/movies to keep track
+CONFIG = Configuration file with all the Series/Movie Feeds to keep track
 
 On torrents.php file you should change the name of config file to config.json
