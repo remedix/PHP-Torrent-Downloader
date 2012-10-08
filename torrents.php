@@ -4,12 +4,27 @@
 	define('CONFIG'	,dirname ( __FILE__ )."/torrents.config.json");
 	$config = json_decode(file_get_contents(CONFIG), true);
 	
+/*
 	$shows = "(".implode("|",$config['shows']).")";
 	$movies = "(".implode("|",$config['movies']).")";
 
+*/
+	$movies = sanitizeIMDBTitles(simplexml_load_file($config['movies']));
+	$shows = sanitizeIMDBTitles(simplexml_load_file($config['shows']));
+
+	
+	function sanitizeIMDBTitles($feed){
+		foreach($feed->channel->item as $item){
+			$list[] = preg_replace("/\s\((.*?)\)/is","",(string) $item->title);
+		}
+		$str = "(".implode("|",$list).")";
+		$str = str_replace(array("-",":","'","!"),array("\-"," ","",""),$str);
+		return $str;
+	}
+
 	// strips characters and finds episodes number
 	function getShowsNumber($episode){
-		return preg_replace("[^0-9]", "",$episode);	
+		return preg_replace("/[^0-9]/is", "",$episode);	
 	}
 		
 	// Checks whether this is a new download based on the episode number
@@ -18,6 +33,7 @@
 		$trimmed = array_reverse(array_map('strtolower',array_map('trim',$matches[1])));
 		$seasons = array_reverse($matches[2]);
 		$episodes = array_reverse($matches[3]);
+
 		$k = array_search(strtolower(trim($show)),$trimmed);
 		if (strtolower($show) == strtolower($trimmed[$k])){
 			if (getShowsNumber($episode)>getShowsNumber($seasons[$k].$episodes[$k])){
@@ -93,6 +109,7 @@
 	}
 
 	if (DEBUG) { print_r($downloadList); }
+		
 	
 	// Download all files inthat download list
 	$messages = $files = array();
