@@ -1,14 +1,15 @@
 {
 	"email"					:	"email",
 	"autotorrents_path"		:	"/path/to/watchdir",
+	"quality"				:	"720p",	
 	"history_file"			:	"/path/to/historyfile/history.txt",
-	"exclude_movies"		:	"(ts|tc|hdtv|dvdrip|hdts|1080p|hebsub|dvdr|480p|WEB\\-DL)",
+	"exclude_movies"		:	"(korsub| cam |camrip|ts|tc|hdtv|dvdrip|hdts|1080p|hebsub|dvdr|480p|WEB\\-DL)",
 	"exclude_shows"			:	"(brrip|1080p|dvdrip|hebsub|dvdr|480p|WEB\\-DL|lies)",
 	"sources": {
 		"source1"			:	"URL goes here",
 		"source2"			:	"URL goes here",
 		"source3"			:	"URL goes here"
 	},
-    "shows": "IMDBShowsRSSURL",
-    "movies": "IMDBMoviesRSSURL"
+    "shows"					: "IMDBShowsRSSURL",
+    "movies"				: "IMDBMoviesRSSURL"
 }

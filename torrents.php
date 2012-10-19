@@ -4,13 +4,9 @@
 	define('CONFIG'	,dirname ( __FILE__ )."/torrents.config.json");
 	$config = json_decode(file_get_contents(CONFIG), true);
 	
-/*
-	$shows = "(".implode("|",$config['shows']).")";
-	$movies = "(".implode("|",$config['movies']).")";
-
-*/
 	$movies = sanitizeIMDBTitles(simplexml_load_file($config['movies']));
 	$shows = sanitizeIMDBTitles(simplexml_load_file($config['shows']));
+	$quality = $config['quality'];
 
 	
 	function sanitizeIMDBTitles($feed){
@@ -18,7 +14,7 @@
 			$list[] = preg_replace("/\s\((.*?)\)/is","",(string) $item->title);
 		}
 		$str = "(".implode("|",$list).")";
-		$str = str_replace(array("-",":","'","!"),array("\-"," ","",""),$str);
+		$str = str_replace(array("-",":","'","!"),array("\-","","",""),$str);
 		return $str;
 	}
 
@@ -62,26 +58,33 @@
 			exec($cmd);
 		}
 	}
+	
+	if (DEBUG){
+		echo $shows."\n";
+		echo $movies."\n";
+	}
 
 	$downloadList = array();	
 	foreach($config['sources'] as $sourceKey=>$url){
 		try {
 			// Support for gzipped xml
 			$xml = @new SimpleXMLElement("compress.zlib://$url", NULL, TRUE);
-			//print_r($xml);echo "\n\n\n\n\n";
+			//print_r($xml->channel->item);echo "\n\n\n\n\n";exit;
 			// Create a download list
 			foreach($xml->channel->item as $i){
-				$title = $i->title;
+				$title = str_replace("."," ",$i->title);
 				if (strstr($i->link,'.torrent')){
 					$torrent = (string) $i->link;
+				// If this is a magnet link try to get its details from 'Torrage'
+				} elseif (strstr($i->link,'magnet:?xt=') && preg_match("/[0-9a-fA-F]{40}/is",$i->link,$hash)) {
+					$torrent = 'http://torrage.ws/torrent/'.$hash[0].'.torrent';
 				} else {
 					$torrent =  $i->enclosure['url'];
 				}
-						
+				
 				// Prepare the downloadList for Tv shows
 				if (!preg_match("/${config['exclude_shows']}/is",$title)){
-//					if (preg_match("/$shows\s(.*?)S([0-9]+)E([0-9]+)(.*?)720p\s/is",$title,$m)){
-					if (preg_match("/$shows(.*?)S([0-9]+)E([0-9]+)(.*?)720p/is",$title,$m)){
+					if (preg_match("/^$shows(.*?)S([0-9]+)E([0-9]+)(.*?)$quality/is",$title,$m)){
 						$episode = "S".$m[3]."E".$m[4];
 						preg_match("/(.*?)$episode(.*?)/is",$title,$cleanTitle);
 						$theTitle = str_replace(".","",ucfirst(trim($cleanTitle[1])));
@@ -92,12 +95,9 @@
 	
 				// Prepare the downloadList for Movies
 				if (!preg_match("/${config['exclude_movies']}/is",$title)){
-					if (preg_match("/$movies(.*?)([0-9]{4})\s720p\s/is",$title,$m)){
+					if (preg_match("/^$movies\s([0-9]{4})(.*?)$quality/is",$title,$m)){
 						$theTitle = ucwords(strtolower(trim($m[1])));
-						$theDate = trim(intval($m[3]));
-						//$theTitle = trim($theTitle.' '.$theDate);
-						// double check with the size. It should be greater than 2GB
-						// TBD
+						$theDate = trim(intval($m[2]));
 						$theContent = array($theTitle,$torrent,$theDate,$sourceKey);
 						$downloadList[$theTitle] = $theContent;
 					}
