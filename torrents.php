@@ -1,6 +1,5 @@
 <?
 	error_reporting(E_ALL);
-	define('DEBUG',	0);
 	define('CONFIG'	,dirname ( __FILE__ )."/torrents.config.json");
 	$config = json_decode(file_get_contents(CONFIG), true);
 	
@@ -8,13 +7,18 @@
 	$shows = sanitizeIMDBTitles(simplexml_load_file($config['shows']));
 	$quality = $config['quality'];
 
+	if (isset($argv[1]) && $argv[1]=='--debug'){ 
+		define("DEBUG",1);
+	} else {
+		define("DEBUG",0);
+	} 
 	
 	function sanitizeIMDBTitles($feed){
 		foreach($feed->channel->item as $item){
 			$list[] = preg_replace("/\s\((.*?)\)/is","",(string) $item->title);
 		}
 		$str = "(".implode("|",$list).")";
-		$str = str_replace(array("-",":","'","!"),array("\-","","",""),$str);
+		$str = str_replace(array("-",":","'","!"),array("\-"," ","",""),$str);
 		return $str;
 	}
 
