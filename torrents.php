@@ -6,6 +6,11 @@
 	$movies = sanitizeIMDBTitles(simplexml_load_file($config['movies']));
 	$shows = sanitizeIMDBTitles(simplexml_load_file($config['shows']));
 	$quality = $config['quality'];
+	
+	
+	if (empty($movies) || empty($shows)){
+		exit;
+	}
 
 	if (isset($argv[1]) && $argv[1]=='--debug'){ 
 		define("DEBUG",1);
@@ -18,7 +23,7 @@
 			$list[] = preg_replace("/\s\((.*?)\)/is","",(string) $item->title);
 		}
 		$str = "(".implode("|",$list).")";
-		$str = str_replace(array("-",":","'","!"),array("\-"," ","",""),$str);
+		$str = str_replace(array("-",":","'","!"),array("\-","","",""),$str);
 		return $str;
 	}
 
@@ -37,14 +42,17 @@
 		$k = array_search(strtolower(trim($show)),$trimmed);
 		if (strtolower($show) == strtolower($trimmed[$k])){
 			if (getShowsNumber($episode)>getShowsNumber($seasons[$k].$episodes[$k])){
-				echo (DEBUG) ? $show." - Will Download: ".getShowsNumber($episode)." is newer than ".getShowsNumber($seasons[$k].$episodes[$k])."\n" : '';
+				echo (DEBUG) ? $show." \tWill Download: ".getShowsNumber($episode)." is newer than ".getShowsNumber($seasons[$k].$episodes[$k])."\n" : '';
 				return false;
+			} else if (getShowsNumber($episode)==getShowsNumber($seasons[$k].$episodes[$k])){
+				echo (DEBUG) ? $show." \tWill Skip: ".getShowsNumber($episode)." is equal to ".getShowsNumber($seasons[$k].$episodes[$k])."\n" : '';
+				return true;			
 			} else {
-				echo (DEBUG) ? $show." - Will Skip: ".getShowsNumber($episode)." is older or equal than ".getShowsNumber($seasons[$k].$episodes[$k])."\n" : '';
+				echo (DEBUG) ? $show." \tWill Skip: ".getShowsNumber($episode)." is older than ".getShowsNumber($seasons[$k].$episodes[$k])."\n" : '';
 				return true;
 			}
 		} else {
-			echo (DEBUG) ? 'Will download for the first time '.$show."\n" : '';
+			echo (DEBUG) ? $show. " \tWill download for the first time\n" : '';
 			return false;
 		}
 		
@@ -56,16 +64,24 @@
 		$path = $config['autotorrents_path']; 
 		$filename = md5($url);
 		$cmd = 'wget -q -O "'.$path.$filename.'.torrent" "'.$url.'"'; 
-		if (DEBUG){
-			echo $cmd."\n";		
-		} else {
+		exec($cmd);
+				
+		// Let's check if file was downloaded ok! Some trackers failed to delivery content and return "Error: pregmatch"
+		$contents = file_get_contents($path.$filename.".torrent");
+		if (strstr($contents,"Error:")) {
+			// Ok we have an error. Delete the downloaded torrent
+			$cmd = 'rm -rf "'.$path.$filename.'.torrent"';
 			exec($cmd);
+			return false;
+		} else {
+			return true;
 		}
+		
 	}
 	
 	if (DEBUG){
-		echo $shows."\n";
-		echo $movies."\n";
+		echo $shows."\n\n";
+		echo $movies."\n\n";
 	}
 
 	$downloadList = array();	
@@ -124,17 +140,19 @@
     	// Also if proper is found, bypass the check and still download it
     	$download = (isNewestFile($d[0],$d[2],$lines) || in_array($entry,$lines) || in_array($entry,$files) || preg_match("/proper/is",$d[1])) ? false : true;
     	if ($download && !DEBUG) {
-    		downloadTorrent($d[1]);
-    		$history = fopen($config['history_file'], 'a');
-    		$messages[$entry] = "[".$d[3]."] $entry";
-    		$files[] = $entry;
-    		fwrite($history,$entry."\n");
-    		fclose($history);
+    		if (downloadTorrent($d[1])){
+	    		$history = fopen($config['history_file'], 'a');
+	    		$messages[$entry] = "[".$d[3]."] $entry";
+	    		$files[] = $entry;
+	    		fwrite($history,$entry."\n");
+	    		fclose($history);
+	    	}
     	}
     }
 
     if ( count($messages)>0 && !DEBUG) {
-    	// or use php's mail() - I'm running this on a synology device that didn't allow it
-		system('echo "'.implode("\n",$messages).'" | nail -s "Auto Downloads" '.$config['email']);
+	$subject = 'Auto Downloads';
+	// mail($config['email'], $subject, implode("\n",$messages);
+	system('echo "'.implode("\n",$messages).'" | nail -s "'.$subject.'" '.$config['email']);
 	}	
 ?>
