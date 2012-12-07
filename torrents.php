@@ -1,16 +1,16 @@
 <?
 	error_reporting(E_ALL);
-	define('CONFIG'	,dirname ( __FILE__ )."/torrents.config.json");
+	if (is_file(dirname ( __FILE__ )."/torrents.config.json")){
+		define('CONFIG'	,dirname ( __FILE__ )."/torrents.config.json");		
+	} else {
+		define('CONFIG'	,dirname ( __FILE__ )."/config.json");
+	}
 	$config = json_decode(file_get_contents(CONFIG), true);
 	
 	$movies = sanitizeIMDBTitles(simplexml_load_file($config['movies']));
 	$shows = sanitizeIMDBTitles(simplexml_load_file($config['shows']));
 	$quality = $config['quality'];
 	
-	
-	if (empty($movies) || empty($shows)){
-		exit;
-	}
 
 	if (isset($argv[1]) && $argv[1]=='--debug'){ 
 		define("DEBUG",1);
@@ -19,10 +19,15 @@
 	} 
 	
 	function sanitizeIMDBTitles($feed){
+		$list = array();
 		foreach($feed->channel->item as $item){
 			$list[] = preg_replace("/\s\((.*?)\)/is","",(string) $item->title);
 		}
-		$str = "(".implode("|",$list).")";
+		if (empty($list)){			
+			exit; // Stop since imdb retuns blank lists;
+		} else {
+			$str = "(".implode("|",$list).")";
+		}
 		$str = str_replace(array("-",":","'","!"),array("\-","","",""),$str);
 		return $str;
 	}
@@ -88,8 +93,16 @@
 	foreach($config['sources'] as $sourceKey=>$url){
 		try {
 			// Support for gzipped xml
-			$xml = @new SimpleXMLElement("compress.zlib://$url", NULL, TRUE);
-			//print_r($xml->channel->item);echo "\n\n\n\n\n";exit;
+			$headers = get_headers($url);
+			$compressed = false;
+			foreach($headers as $h){
+				if (strstr($h,"gzip")) $compressed = true;
+			}
+			
+			$xml = ($compressed) ? 
+				@new SimpleXMLElement("compress.zlib://$url", NULL, TRUE):
+				@new SimpleXMLElement($url, NULL, TRUE);
+					
 			// Create a download list
 			foreach($xml->channel->item as $i){
 				$title = str_replace("."," ",$i->title);
