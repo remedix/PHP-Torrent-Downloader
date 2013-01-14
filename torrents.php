@@ -19,6 +19,7 @@
 	} 
 	
 	function sanitizeIMDBTitles($feed){
+		global $config;
 		$list = array();
 		foreach($feed->channel->item as $item){
 			$list[] = preg_replace("/\s\((.*?)\)/is","",(string) $item->title);
@@ -29,6 +30,10 @@
 			$str = "(".implode("|",$list).")";
 		}
 		$str = str_replace(array("-",":","'","!"),array("\-","","",""),$str);
+		// If we have title overwrites then apply them here:
+		if (isset($config['overwrites'])) foreach($config['overwrites'] as $key=>$val){
+			$str = str_replace($key,$val,$str);						
+		}
 		return $str;
 	}
 
@@ -105,7 +110,9 @@
 					
 			// Create a download list
 			foreach($xml->channel->item as $i){
-				$title = str_replace("."," ",$i->title);
+				// Support for Karmorra RSS
+				$title = trim(str_replace(array(".","HD 720p: ")," ",$i->title));
+				
 				if (strstr($i->link,'.torrent')){
 					$torrent = (string) $i->link;
 				// If this is a magnet link try to get its details from 'Torrage'
@@ -163,9 +170,15 @@
     	}
     }
 
-    if ( count($messages)>0 && !DEBUG) {
-	$subject = 'Auto Downloads';
-	// mail($config['email'], $subject, implode("\n",$messages);
-	system('echo "'.implode("\n",$messages).'" | nail -s "'.$subject.'" '.$config['email']);
+
+
+    if ( count($messages)>0 ) {
+		$subject = 'Auto Downloads';
+		if (isset($config['mail_method']) && $config['mail_method']=='phpmail'){
+			mail($config['email'], $subject, implode("\n",$messages));
+		} else {
+			system('echo "'.implode("\n",$messages).'" | nail -s "'.$subject.'" '.$config['email']);			
+		}
 	}	
+
 ?>

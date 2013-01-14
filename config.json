@@ -1,7 +1,8 @@
 {
-	"email"					:	"email",
-	"autotorrents_path"		:	"/path/to/watchdir",
+	"email"					:	"emailAddress",
+	"autotorrents_path"		:	"/path/to/watchdir/",
 	"quality"				:	"720p",	
+	"mail_method"			:	"phpmail",
 	"history_file"			:	"/path/to/historyfile/history.txt",
 	"exclude_movies"		:	"(korsub| cam |camrip|ts|tc|hdtv|dvdrip|hdts|1080p|hebsub|dvdr|480p|WEB\\-DL)",
 	"exclude_shows"			:	"(brrip|1080p|dvdrip|hebsub|dvdr|480p|WEB\\-DL|lies)",
@@ -11,5 +12,8 @@
 		"source3"			:	"URL goes here"
 	},
     "shows"					: "IMDBShowsRSSURL",
-    "movies"				: "IMDBMoviesRSSURL"
+    "movies"				: "IMDBMoviesRSSURL",
+    "overwrites": {
+	    	"American Horror Story Asylum"	:	"American Horror Story"
+    }	    
 }
