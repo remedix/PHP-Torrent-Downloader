@@ -18,6 +18,7 @@
 		define("DEBUG",0);
 	} 
 	
+	
 	function sanitizeIMDBTitles($feed){
 		global $config;
 		$list = array();
